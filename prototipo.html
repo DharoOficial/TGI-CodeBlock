@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeBlocos - Programação Visual Animada</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/blockly.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/blocks.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.3.3/msg/pt-br.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .logo span {
+            color: #ffd700;
+        }
+
+        .main-container {
+            padding: 1rem;
+            height: calc(100vh - 80px);
+        }
+
+        .coding-area {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .code-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .code-title h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #2dcc70;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .workspace-container {
+            display: flex;
+            height: calc(100% - 100px);
+        }
+
+        #blocklyDiv {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .visualization-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-left: 2px solid #ecf0f1;
+        }
+
+        .preview-container {
+            flex: 1;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas {
+            border: 2px solid #bdc3c7;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tooltip-box {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(52, 73, 94, 0.9);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            max-width: 250px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+
+        .tooltip-box:hover {
+            background: rgba(52, 73, 94, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .tooltip-box h4 {
+            margin-bottom: 0.5rem;
+            color: #ffd700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #ffd700;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #ff6b6b;
+        }
+
+        .tooltip-box.hidden {
+            opacity: 0;
+            transform: translateX(-100%);
+            pointer-events: none;
+        }
+
+        .console-container {
+            height: 150px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border-top: 2px solid #34495e;
+        }
+
+        .console-line {
+            margin-bottom: 0.3rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .character-trail {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(45, 204, 112, 0.6);
+            pointer-events: none;
+            animation: trailFade 1s ease-out forwards;
+        }
+
+        @keyframes trailFade {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.3); }
+        }
+
+        .speed-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .speed-slider {
+            width: 100px;
+        }
+
+        @media (max-width: 768px) {
+            .workspace-container {
+                flex-direction: column;
+            }
+            
+            #blocklyDiv {
+                min-height: 300px;
+            }
+            
+            .visualization-area {
+                border-left: none;
+                border-top: 2px solid #ecf0f1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">Code<span>Blocos</span></div>
+    </div>
+    
+    <div class="main-container">
+        <div class="coding-area">
+            <div class="code-title">
+                <h2>Meu Primeiro Programa Animado</h2>
+                <div class="action-buttons">
+                    <button id="saveButton" class="btn btn-secondary">💾 Salvar</button>
+                    <button id="runButton" class="btn btn-success">▶️ Executar</button>
+                    <button id="stopButton" class="btn btn-secondary">⏹️ Parar</button>
+                    <button id="resetButton" class="btn btn-secondary">🔄 Reiniciar</button>
+                </div>
+            </div>
+            
+            <div class="workspace-container">
+                <div id="blocklyDiv"></div>
+                
+                <div class="visualization-area">
+                    <div class="preview-container">
+                        <div class="canvas-container">
+                            <canvas id="canvas" width="400" height="300"></canvas>
+                            <div class="tooltip-box" id="tooltipBox">
+                                <h4>💡 Dica: <button class="close-btn" onclick="closeTips()" title="Fechar dicas">×</button></h4>
+                                <p>Arraste os blocos da caixa de ferramentas para criar animações! Use os controles de repetição para criar padrões interessantes.</p>
+                                <p style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.8;">Clique no X para esconder as dicas</p>
+                            </div>
+                            <div class="speed-control">
+                                <span>Velocidade:</span>
+                                <input type="range" id="speedSlider" class="speed-slider" min="1" max="10" value="5">
+                                <span id="speedValue">5</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="console-container" id="console">
+                        <div class="console-line">🚀 Bem-vindo ao CodeBlocos Animado!</div>
+                        <div class="console-line">📝 Arraste blocos para criar seu programa</div>
+                        <div class="console-line">🎨 Veja a animação em tempo real!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toolbox definition -->
+    <xml id="toolbox" style="display: none">
+        <category name="🏃 Movimento" colour="#F39C12">
+            <block type="move_forward"></block>
+            <block type="turn_direction"></block>
+            <block type="move_to"></block>
+            <block type="set_color"></block>
+            <block type="pen_up_down"></block>
+            <block type="set_speed"></block>
+        </category>
+        <category name="🎛️ Controle" colour="#9B59B6">
+            <block type="controls_repeat_ext">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="controls_if"></block>
+            <block type="controls_whileUntil"></block>
+        </category>
+        <category name="🔢 Matemática" colour="#E74C3C">
+            <block type="math_number"></block>
+            <block type="math_arithmetic"></block>
+            <block type="logic_compare"></block>
+        </category>
+        <category name="📦 Variáveis" colour="#16A085" custom="VARIABLE"></category>
+    </xml>
+    
+    <script>
+        // Estado global da aplicação
+        let gameState = {
+            character: {
+                x: 200,
+                y: 150,
+                angle: 0,
+                color: '#2dcc70',
+                penDown: true,
+                size: 15,
+                speed: 5
+            },
+            isRunning: false,
+            animationSpeed: 300,
+            trails: []
+        };
+
+        let workspace;
+        let canvas, ctx;
+        let executionStopped = false;
+
+        // Inicialização
+        function init() {
+            initBlockly();
+            initCanvas();
+            initEventListeners();
+            loadSavedWorkspace();
+            resetCanvas();
+        }
+
+        function initBlockly() {
+            workspace = Blockly.inject('blocklyDiv', {
+                toolbox: document.getElementById('toolbox'),
+                scrollbars: true,
+                horizontalLayout: false,
+                toolboxPosition: 'start',
+                trashcan: true,
+                sounds: true,
+                grid: {
+                    spacing: 20,
+                    length: 3,
+                    colour: '#e0e0e0',
+                    snap: true
+                },
+                zoom: {
+                    controls: true,
+                    wheel: true,
+                    startScale: 0.8,
+                    maxScale: 3,
+                    minScale: 0.3,
+                    scaleSpeed: 1.2
+                }
+            });
+
+            defineCustomBlocks();
+        }
+
+        function initCanvas() {
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            
+            // Configurar canvas com alta resolução
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+        }
+
+        function initEventListeners() {
+            document.getElementById('runButton').addEventListener('click', runProgram);
+            document.getElementById('resetButton').addEventListener('click', resetCanvas);
+            document.getElementById('stopButton').addEventListener('click', stopProgram);
+            document.getElementById('saveButton').addEventListener('click', saveWorkspace);
+            
+            const speedSlider = document.getElementById('speedSlider');
+            speedSlider.addEventListener('input', function() {
+                gameState.animationSpeed = 50 + (10 - this.value) * 50;
+                document.getElementById('speedValue').textContent = this.value;
+            });
+
+            window.addEventListener('resize', handleResize);
+        }
+
+        function handleResize() {
+            setTimeout(() => {
+                initCanvas();
+                drawScene();
+            }, 100);
+        }
+
+        // Definição de blocos customizados
+        function defineCustomBlocks() {
+            // Bloco mover para frente
+            Blockly.Blocks['move_forward'] = {
+                init: function() {
+                    this.appendValueInput('DISTANCE')
+                        .setCheck('Number')
+                        .appendField('🏃 mover');
+                    this.appendDummyInput()
+                        .appendField('passos')
+                        .appendField(new Blockly.FieldNumber(50, 1, 500), 'STEPS');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour('#F39C12');
+                    this.setTooltip('Move o personagem para frente com animação suave');
+                }
+            };
+
+            // Bloco girar
+            Blockly.Blocks['turn_direction'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField('🔄 girar')
+                        .appendField(new Blockly.FieldNumber(90, -360, 360), 'ANGLE')
+                        .appendField('graus');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour('#F39C12');
+                    this.setTooltip('Gira o personagem em graus com animação');
+                }
+            };
+
+            // Bloco mover para posição
+            Blockly.Blocks['move_to'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField('📍 ir para x:')
+                        .appendField(new Blockly.FieldNumber(200, 0, 400), 'X')
+                        .appendField('y:')
+                        .appendField(new Blockly.FieldNumber(150, 0, 300), 'Y');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour('#F39C12');
+                    this.setTooltip('Move o personagem para uma posição específica');
+                }
+            };
+
+            // Bloco mudar cor
+            Blockly.Blocks['set_color'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField('🎨 mudar cor para')
+                        .appendField(new Blockly.FieldColour('#2dcc70'), 'COLOR');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour('#F39C12');
+                    this.setTooltip('Muda a cor do personagem e do desenho');
+                }
+            };
+
+            // Bloco controlar caneta
+            Blockly.Blocks['pen_up_down'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField('✏️')
+                        .appendField(new Blockly.FieldDropdown([
+                            ['levantar caneta', 'UP'],
+                            ['abaixar caneta', 'DOWN']
+                        ]), 'ACTION');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour('#F39C12');
+                    this.setTooltip('Controla se o personagem desenha ao se mover');
+                }
+            };
+
+            // Bloco definir velocidade
+            Blockly.Blocks['set_speed'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField('⚡ definir velocidade')
+                        .appendField(new Blockly.FieldNumber(5, 1, 10), 'SPEED');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour('#F39C12');
+                    this.setTooltip('Define a velocidade de movimento (1-10)');
+                }
+            };
+
+            // Geradores de código JavaScript
+            Blockly.JavaScript['move_forward'] = function(block) {
+                const distance = block.getFieldValue('STEPS');
+                const inputDistance = Blockly.JavaScript.valueToCode(block, 'DISTANCE', Blockly.JavaScript.ORDER_ATOMIC);
+                const finalDistance = inputDistance || distance;
+                return `await moveForward(${finalDistance});\n`;
+            };
+
+            Blockly.JavaScript['turn_direction'] = function(block) {
+                const angle = block.getFieldValue('ANGLE');
+                return `await turnDirection(${angle});\n`;
+            };
+
+            Blockly.JavaScript['move_to'] = function(block) {
+                const x = block.getFieldValue('X');
+                const y = block.getFieldValue('Y');
+                return `await moveTo(${x}, ${y});\n`;
+            };
+
+            Blockly.JavaScript['set_color'] = function(block) {
+                const color = block.getFieldValue('COLOR');
+                return `setColor("${color}");\n`;
+            };
+
+            Blockly.JavaScript['pen_up_down'] = function(block) {
+                const action = block.getFieldValue('ACTION');
+                return `setPenState("${action}");\n`;
+            };
+
+            Blockly.JavaScript['set_speed'] = function(block) {
+                const speed = block.getFieldValue('SPEED');
+                return `setSpeed(${speed});\n`;
+            };
+        }
+
+        // Funções de animação e movimento
+        async function moveForward(steps) {
+            if (executionStopped) return;
+            
+            const startX = gameState.character.x;
+            const startY = gameState.character.y;
+            const rad = gameState.character.angle * Math.PI / 180;
+            const endX = startX + steps * Math.cos(rad);
+            const endY = startY + steps * Math.sin(rad);
+            
+            addConsoleLog(`🏃 Movendo ${steps} passos`);
+            
+            // Animação suave
+            const animationSteps = Math.max(10, steps / 3);
+            const stepTime = gameState.animationSpeed / animationSteps;
+            
+            for (let i = 0; i <= animationSteps; i++) {
+                if (executionStopped) return;
+                
+                const progress = i / animationSteps;
+                const currentX = startX + (endX - startX) * progress;
+                const currentY = startY + (endY - startY) * progress;
+                
+                // Desenhar linha se a caneta estiver abaixada
+                if (gameState.character.penDown && i > 0) {
+                    const prevX = startX + (endX - startX) * ((i-1) / animationSteps);
+                    const prevY = startY + (endY - startY) * ((i-1) / animationSteps);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(currentX, currentY);
+                    ctx.strokeStyle = gameState.character.color;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+                
+                // Adicionar rastro
+                addTrail(currentX, currentY);
+                
+                gameState.character.x = currentX;
+                gameState.character.y = currentY;
+                
+                drawScene();
+                await sleep(stepTime);
+            }
+        }
+
+        async function turnDirection(angle) {
+            if (executionStopped) return;
+            
+            const startAngle = gameState.character.angle;
+            const endAngle = (startAngle + angle) % 360;
+            
+            addConsoleLog(`🔄 Girando ${angle} graus`);
+            
+            // Animação de rotação
+            const rotationSteps = Math.abs(angle) / 5;
+            const stepTime = gameState.animationSpeed / Math.max(10, rotationSteps);
+            
+            for (let i = 0; i <= rotationSteps; i++) {
+                if (executionStopped) return;
+                
+                const progress = i / rotationSteps;
+                gameState.character.angle = startAngle + angle * progress;
+                
+                drawScene();
+                await sleep(stepTime);
+            }
+            
+            gameState.character.angle = endAngle;
+        }
+
+        async function moveTo(x, y) {
+            if (executionStopped) return;
+            
+            const startX = gameState.character.x;
+            const startY = gameState.character.y;
+            
+            addConsoleLog(`📍 Indo para posição (${x}, ${y})`);
+            
+            // Animação de movimento direto
+            const distance = Math.sqrt((x - startX) ** 2 + (y - startY) ** 2);
+            const animationSteps = Math.max(10, distance / 5);
+            const stepTime = gameState.animationSpeed / animationSteps;
+            
+            for (let i = 0; i <= animationSteps; i++) {
+                if (executionStopped) return;
+                
+                const progress = i / animationSteps;
+                const currentX = startX + (x - startX) * progress;
+                const currentY = startY + (y - startY) * progress;
+                
+                // Desenhar linha se a caneta estiver abaixada
+                if (gameState.character.penDown && i > 0) {
+                    const prevX = startX + (x - startX) * ((i-1) / animationSteps);
+                    const prevY = startY + (y - startY) * ((i-1) / animationSteps);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(currentX, currentY);
+                    ctx.strokeStyle = gameState.character.color;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+                
+                addTrail(currentX, currentY);
+                
+                gameState.character.x = currentX;
+                gameState.character.y = currentY;
+                
+                drawScene();
+                await sleep(stepTime);
+            }
+        }
+
+        function setColor(color) {
+            gameState.character.color = color;
+            addConsoleLog(`🎨 Mudando cor para ${color}`);
+            drawScene();
+        }
+
+        function setPenState(action) {
+            gameState.character.penDown = action === 'DOWN';
+            const state = action === 'DOWN' ? 'abaixada' : 'levantada';
+            addConsoleLog(`✏️ Caneta ${state}`);
+        }
+
+        function setSpeed(speed) {
+            gameState.character.speed = speed;
+            gameState.animationSpeed = 50 + (10 - speed) * 50;
+            document.getElementById('speedSlider').value = speed;
+            document.getElementById('speedValue').textContent = speed;
+            addConsoleLog(`⚡ Velocidade definida para ${speed}`);
+        }
+
+        // Funções de desenho
+        function drawScene() {
+            // Limpar apenas o personagem, mantendo os desenhos
+            drawCharacter();
+            updateTrails();
+        }
+
+        function drawCharacter() {
+            const char = gameState.character;
+            
+            // Desenhar sombra
+            ctx.beginPath();
+            ctx.arc(char.x + 2, char.y + 2, char.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fill();
+            
+            // Desenhar corpo do personagem
+            ctx.beginPath();
+            ctx.arc(char.x, char.y, char.size, 0, Math.PI * 2);
+            ctx.fillStyle = char.color;
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Desenhar direção
+            const dirLength = char.size + 5;
+            const dirX = char.x + dirLength * Math.cos(char.angle * Math.PI / 180);
+            const dirY = char.y + dirLength * Math.sin(char.angle * Math.PI / 180);
+            
+            ctx.beginPath();
+            ctx.moveTo(char.x, char.y);
+            ctx.lineTo(dirX, dirY);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            // Desenhar olhos
+            const eyeOffset = char.size * 0.4;
+            const eyeAngle = char.angle * Math.PI / 180;
+            const eyeX1 = char.x + eyeOffset * Math.cos(eyeAngle - 0.5);
+            const eyeY1 = char.y + eyeOffset * Math.sin(eyeAngle - 0.5);
+            const eyeX2 = char.x + eyeOffset * Math.cos(eyeAngle + 0.5);
+            const eyeY2 = char.y + eyeOffset * Math.sin(eyeAngle + 0.5);
+            
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(eyeX1, eyeY1, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(eyeX2, eyeY2, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(eyeX1, eyeY1, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(eyeX2, eyeY2, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function addTrail(x, y) {
+            gameState.trails.push({
+                x: x,
+                y: y,
+                time: Date.now(),
+                opacity: 1
+            });
+            
+            // Remover rastros antigos
+            gameState.trails = gameState.trails.filter(trail => 
+                Date.now() - trail.time < 1000
+            );
+        }
+
+        function updateTrails() {
+            const now = Date.now();
+            gameState.trails.forEach(trail => {
+                const age = now - trail.time;
+                trail.opacity = Math.max(0, 1 - age / 1000);
+                
+                if (trail.opacity > 0) {
+                    ctx.beginPath();
+                    ctx.arc(trail.x, trail.y, 3 * trail.opacity, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(45, 204, 112, ${trail.opacity * 0.5})`;
+                    ctx.fill();
+                }
+            });
+        }
+
+        function resetCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            gameState.character.x = canvas.width / 2;
+            gameState.character.y = canvas.height / 2;
+            gameState.character.angle = 0;
+            gameState.character.color = '#2dcc70';
+            gameState.character.penDown = true;
+            gameState.trails = [];
+            
+            drawScene();
+            addConsoleLog('🔄 Canvas reiniciado');
+        }
+
+        // Controle de execução
+        async function runProgram() {
+            if (gameState.isRunning) return;
+            
+            gameState.isRunning = true;
+            executionStopped = false;
+            
+            const code = Blockly.JavaScript.workspaceToCode(workspace);
+            addConsoleLog('🚀 Executando programa...');
+            
+            document.getElementById('runButton').disabled = true;
+            document.getElementById('stopButton').disabled = false;
+            
+            try {
+                const asyncFunction = new Function(`
+                    return async function() {
+                        ${code}
+                    }
+                `)();
+                
+                await asyncFunction();
+                
+                if (!executionStopped) {
+                    addConsoleLog('✅ Programa concluído com sucesso!');
+                }
+            } catch (e) {
+                addConsoleLog('❌ Erro: ' + e.message);
+            } finally {
+                gameState.isRunning = false;
+                document.getElementById('runButton').disabled = false;
+                document.getElementById('stopButton').disabled = true;
+            }
+        }
+
+        function stopProgram() {
+            executionStopped = true;
+            gameState.isRunning = false;
+            document.getElementById('runButton').disabled = false;
+            document.getElementById('stopButton').disabled = true;
+            addConsoleLog('⏹️ Programa interrompido');
+        }
+
+        // Funções utilitárias
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function addConsoleLog(message) {
+            const consoleElement = document.getElementById('console');
+            const logLine = document.createElement('div');
+            logLine.className = 'console-line';
+            logLine.textContent = message;
+            consoleElement.appendChild(logLine);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+            
+            // Limitar número de linhas no console
+            const lines = consoleElement.children;
+            if (lines.length > 50) {
+                consoleElement.removeChild(lines[0]);
+            }
+        }
+
+        function saveWorkspace() {
+            try {
+                const xml = Blockly.Xml.workspaceToDom(workspace);
+                const xmlText = Blockly.Xml.domToText(xml);
+                const data = {
+                    workspace: xmlText,
+                    timestamp: new Date().toISOString(),
+                    version: '2.0'
+                };
+                
+                // Salvar no localStorage
+                const savedData = JSON.stringify(data);
+                window.localStorage.setItem('codeblocos_workspace', savedData);
+                
+                // Criar arquivo para download
+                const blob = new Blob([savedData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `codeblocos_programa_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                addConsoleLog('💾 Programa salvo com sucesso!');
+            } catch (e) {
+                addConsoleLog('❌ Erro ao salvar: ' + e.message);
+            }
+        }
+
+        function loadSavedWorkspace() {
+            try {
+                const savedData = window.localStorage.getItem('codeblocos_workspace');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    const xml = Blockly.Xml.textToDom(data.workspace);
+                    Blockly.Xml.domToWorkspace(xml, workspace);
+                    addConsoleLog('📂 Programa anterior carregado');
+                }
+            } catch (e) {
+                console.error('Erro ao carregar workspace salvo:', e);
+                addConsoleLog('⚠️ Não foi possível carregar programa anterior');
+            }
+        }
+
+        // Função para criar exemplos de programa
+        function loadExample(exampleName) {
+            let exampleCode = '';
+            
+            switch(exampleName) {
+                case 'square':
+                    exampleCode = `
+                        <xml xmlns="https://developers.google.com/blockly/xml">
+                            <block type="controls_repeat_ext" x="20" y="20">
+                                <value name="TIMES">
+                                    <shadow type="math_number">
+                                        <field name="NUM">4</field>
+                                    </shadow>
+                                </value>
+                                <statement name="DO">
+                                    <block type="move_forward">
+                                        <field name="STEPS">100</field>
+                                        <next>
+                                            <block type="turn_direction">
+                                                <field name="ANGLE">90</field>
+                                            </block>
+                                        </next>
+                                    </block>
+                                </statement>
+                            </block>
+                        </xml>
+                    `;
+                    break;
+                case 'spiral':
+                    exampleCode = `
+                        <xml xmlns="https://developers.google.com/blockly/xml">
+                            <block type="controls_repeat_ext" x="20" y="20">
+                                <value name="TIMES">
+                                    <shadow type="math_number">
+                                        <field name="NUM">20</field>
+                                    </shadow>
+                                </value>
+                                <statement name="DO">
+                                    <block type="move_forward">
+                                        <field name="STEPS">10</field>
+                                        <next>
+                                            <block type="turn_direction">
+                                                <field name="ANGLE">15</field>
+                                            </block>
+                                        </next>
+                                    </block>
+                                </statement>
+                            </block>
+                        </xml>
+                    `;
+                    break;
+            }
+            
+            if (exampleCode) {
+                try {
+                    workspace.clear();
+                    const xml = Blockly.Xml.textToDom(exampleCode);
+                    Blockly.Xml.domToWorkspace(xml, workspace);
+                    addConsoleLog(`📝 Exemplo "${exampleName}" carregado!`);
+                } catch (e) {
+                    addConsoleLog('❌ Erro ao carregar exemplo: ' + e.message);
+                }
+            }
+        }
+
+        // Adicionar botões de exemplo
+        function addExampleButtons() {
+            const titleDiv = document.querySelector('.code-title');
+            const exampleDiv = document.createElement('div');
+            exampleDiv.innerHTML = `
+                <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
+                    <button onclick="loadExample('square')" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+                        📐 Quadrado
+                    </button>
+                    <button onclick="loadExample('spiral')" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+                        🌀 Espiral
+                    </button>
+                </div>
+            `;
+            titleDiv.insertBefore(exampleDiv, titleDiv.querySelector('.action-buttons'));
+        }
+
+        // Função para detectar colisões com bordas
+        function checkBoundaries() {
+            const char = gameState.character;
+            const margin = char.size;
+            
+            if (char.x < margin) char.x = margin;
+            if (char.x > canvas.width - margin) char.x = canvas.width - margin;
+            if (char.y < margin) char.y = margin;
+            if (char.y > canvas.height - margin) char.y = canvas.height - margin;
+        }
+
+        // Função para adicionar efeitos visuais
+        function addSparkleEffect(x, y) {
+            const sparkles = 5;
+            for (let i = 0; i < sparkles; i++) {
+                setTimeout(() => {
+                    if (executionStopped) return;
+                    
+                    const angle = (Math.PI * 2 * i) / sparkles;
+                    const distance = 20 + Math.random() * 10;
+                    const sparkleX = x + Math.cos(angle) * distance;
+                    const sparkleY = y + Math.sin(angle) * distance;
+                    
+                    ctx.beginPath();
+                    ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 70%)`;
+                    ctx.fill();
+                    
+                    setTimeout(() => {
+                        ctx.clearRect(sparkleX - 3, sparkleY - 3, 6, 6);
+                        drawScene();
+                    }, 200);
+                }, i * 50);
+            }
+        }
+
+        // Função para exportar desenho como imagem
+        function exportDrawing() {
+            try {
+                const link = document.createElement('a');
+                link.download = `codeblocos_desenho_${new Date().toISOString().slice(0,10)}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                addConsoleLog('🖼️ Desenho exportado como imagem!');
+            } catch (e) {
+                addConsoleLog('❌ Erro ao exportar imagem: ' + e.message);
+            }
+        }
+
+        // Adicionar função de upload de arquivo
+        function setupFileUpload() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.style.display = 'none';
+            
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            workspace.clear();
+                            const xml = Blockly.Xml.textToDom(data.workspace);
+                            Blockly.Xml.domToWorkspace(xml, workspace);
+                            addConsoleLog('📂 Arquivo carregado com sucesso!');
+                        } catch (error) {
+                            addConsoleLog('❌ Erro ao carregar arquivo: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            });
+            
+            document.body.appendChild(input);
+            
+            // Adicionar botão de upload
+            const uploadBtn = document.createElement('button');
+            uploadBtn.className = 'btn btn-secondary';
+            uploadBtn.innerHTML = '📁 Carregar';
+            uploadBtn.onclick = () => input.click();
+            
+            const actionButtons = document.querySelector('.action-buttons');
+            actionButtons.insertBefore(uploadBtn, actionButtons.firstChild);
+        }
+
+        // Adicionar botão para mostrar dicas novamente
+        function setupTipsButton() {
+            const tipsBtn = document.createElement('button');
+            tipsBtn.className = 'btn btn-secondary';
+            tipsBtn.innerHTML = '💡 Dicas';
+            tipsBtn.onclick = showTips;
+            tipsBtn.title = 'Mostrar caixa de dicas';
+            
+            const actionButtons = document.querySelector('.action-buttons');
+            actionButtons.appendChild(tipsBtn);
+        }
+
+        // Função para criar grid no canvas
+        function drawGrid() {
+            const gridSize = 20;
+            ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+            ctx.lineWidth = 1;
+            
+            // Linhas verticais
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Linhas horizontais
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Função para mostrar coordenadas
+        function showCoordinates() {
+            const char = gameState.character;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(10, 10, 120, 40);
+            ctx.fillStyle = 'white';
+            ctx.font = '12px monospace';
+            ctx.fillText(`X: ${Math.round(char.x)}`, 15, 25);
+            ctx.fillText(`Y: ${Math.round(char.y)}`, 15, 40);
+        }
+
+        // Atualizar função drawScene para incluir novos elementos
+        const originalDrawScene = drawScene;
+        drawScene = function() {
+            // Limpar canvas mantendo apenas os desenhos permanentes
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Redesenhar apenas as linhas (preservar desenhos)
+            // (O canvas mantém automaticamente as linhas desenhadas)
+            
+            drawGrid();
+            drawCharacter();
+            updateTrails();
+            showCoordinates();
+            checkBoundaries();
+        };
+
+        // Função para fechar a caixa de dicas
+        function closeTips() {
+            const tooltipBox = document.getElementById('tooltipBox');
+            tooltipBox.classList.add('hidden');
+            
+            // Salvar preferência do usuário
+            localStorage.setItem('codeblocos_tips_closed', 'true');
+            
+            addConsoleLog('💡 Dicas escondidas - você pode reativá-las no menu');
+        }
+
+        // Função para mostrar dicas novamente
+        function showTips() {
+            const tooltipBox = document.getElementById('tooltipBox');
+            tooltipBox.classList.remove('hidden');
+            localStorage.setItem('codeblocos_tips_closed', 'false');
+            addConsoleLog('💡 Dicas ativadas novamente!');
+        }
+
+        // Verificar se as dicas devem estar escondidas
+        function checkTipsVisibility() {
+            const tipsClosed = localStorage.getItem('codeblocos_tips_closed') === 'true';
+            if (tipsClosed) {
+                const tooltipBox = document.getElementById('tooltipBox');
+                tooltipBox.classList.add('hidden');
+            }
+        }
+
+        // Tornar funções globais para os botões
+        window.loadExample = loadExample;
+        window.exportDrawing = exportDrawing;
+        window.closeTips = closeTips;
+        window.showTips = showTips;
+
+        // Adicionar botão de exportar imagem
+        function setupExportButton() {
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'btn btn-secondary';
+            exportBtn.innerHTML = '🖼️ Exportar';
+            exportBtn.onclick = exportDrawing;
+            
+            const actionButtons = document.querySelector('.action-buttons');
+            actionButtons.appendChild(exportBtn);
+        }
+
+        // Inicialização completa quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            addExampleButtons();
+            setupFileUpload();
+            setupExportButton();
+            setupTipsButton();
+            checkTipsVisibility();
+            
+            // Adicionar dicas interativas
+            setTimeout(() => {
+                addConsoleLog('💡 Dica: Use Ctrl+Z para desfazer no editor de blocos');
+                setTimeout(() => {
+                    addConsoleLog('🎯 Experimente os exemplos: Quadrado e Espiral');
+                }, 2000);
+            }, 3000);
+        });
+
+        // Adicionar atalhos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveWorkspace();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        if (!gameState.isRunning) {
+                            runProgram();
+                        }
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        resetCanvas();
+                        break;
+                }
+            }
+            
+            if (e.key === 'Escape' && gameState.isRunning) {
+                stopProgram();
+            }
+        });
+    </script>
+</body>
+</html>
